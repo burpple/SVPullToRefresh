@@ -211,23 +211,23 @@ static char UIScrollViewPullToRefreshView;
 
 - (void)layoutSubviews {
     
-    for(id otherView in self.viewForState) {
-        if([otherView isKindOfClass:[UIView class]])
-            [otherView removeFromSuperview];
-    }
-    
-    id customView = [self.viewForState objectAtIndex:self.state];
+    // for(id otherView in self.viewForState) {
+    //     if([otherView isKindOfClass:[UIView class]])
+    //         [otherView removeFromSuperview];
+    // }
+
+    id customView = self.viewForState[0];
     BOOL hasCustomView = [customView isKindOfClass:[UIView class]];
-    
-    self.titleLabel.hidden = hasCustomView;
-    self.subtitleLabel.hidden = hasCustomView;
-    self.arrow.hidden = hasCustomView;
+
+    // self.titleLabel.hidden = hasCustomView;
+    // self.subtitleLabel.hidden = hasCustomView;
+    // self.arrow.hidden = hasCustomView;
     
     if(hasCustomView) {
-        [self addSubview:customView];
-        CGRect viewBounds = [customView bounds];
-        CGPoint origin = CGPointMake(roundf((self.bounds.size.width-viewBounds.size.width)/2), roundf((self.bounds.size.height-viewBounds.size.height)/2));
-        [customView setFrame:CGRectMake(origin.x, origin.y, viewBounds.size.width, viewBounds.size.height)];
+        // [self addSubview:customView];
+        // CGRect viewBounds = [customView bounds];
+        // CGPoint origin = CGPointMake(roundf((self.bounds.size.width-viewBounds.size.width)/2), roundf((self.bounds.size.height-viewBounds.size.height)/2));
+        // [customView setFrame:CGRectMake(origin.x, origin.y, viewBounds.size.width, viewBounds.size.height)];
     }
     else {
         switch (self.state) {
@@ -549,10 +549,31 @@ static char UIScrollViewPullToRefreshView;
         viewPlaceholder = @"";
     
     if(state == SVPullToRefreshStateAll)
-        [self.viewForState replaceObjectsInRange:NSMakeRange(0, 3) withObjectsFromArray:@[viewPlaceholder, viewPlaceholder, viewPlaceholder]];
+        self.viewForState = @[viewPlaceholder];
+        // [self.viewForState replaceObjectsInRange:NSMakeRange(0, 3) withObjectsFromArray:@[viewPlaceholder, viewPlaceholder, viewPlaceholder]];
     else
         [self.viewForState replaceObjectAtIndex:state withObject:viewPlaceholder];
+
+    // moved over from layoutSubviews
+    for(id otherView in self.viewForState) {
+        if([otherView isKindOfClass:[UIView class]])
+            [otherView removeFromSuperview];
+    }
     
+    id customView = self.viewForState[0];
+    BOOL hasCustomView = [customView isKindOfClass:[UIView class]];
+    
+    self.titleLabel.hidden = hasCustomView;
+    self.subtitleLabel.hidden = hasCustomView;
+    self.arrow.hidden = hasCustomView;
+
+    if(hasCustomView) {
+        [self addSubview:customView];
+        CGRect viewBounds = [customView bounds];
+        CGPoint origin = CGPointMake(roundf((self.bounds.size.width-viewBounds.size.width)/2), roundf((self.bounds.size.height-viewBounds.size.height)/2));
+        [customView setFrame:CGRectMake(origin.x, origin.y, viewBounds.size.width, viewBounds.size.height)];
+    }
+
     [self setNeedsLayout];
 }
 
@@ -665,6 +686,17 @@ static char UIScrollViewPullToRefreshView;
         self.arrow.layer.opacity = !hide;
         //[self.arrow setNeedsDisplay];//ios 4
     } completion:NULL];
+}
+
+- (void)dealloc {
+    for(id view in self.viewForState) {
+        if([view isKindOfClass:[UIView class]]) {
+            [view removeFromSuperview];
+            [self removeObserver:view forKeyPath:@"state"];
+        }
+    }
+    
+    self.viewForState = nil;
 }
 
 @end
